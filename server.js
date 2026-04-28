@@ -13,6 +13,7 @@ const morgan = require('morgan');
 const Product = require('./models/Product');
 const Settings = require('./models/Settings');
 const Order = require('./models/Order');
+
 const {
   Environment,
   IntegrationApiKeys,
@@ -36,15 +37,15 @@ for (const key of requiredEnv) {
 app.set('trust proxy', 1);
 
 app.use(cors({
-    origin: process.env.PUBLIC_BASE_URL || '*',
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  origin: process.env.PUBLIC_BASE_URL || '*',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
 }));
 
 app.use(compression({
-    level: 6,
-    threshold: 100 * 1024
+  level: 6,
+  threshold: 100 * 1024
 }));
 
 app.use(morgan('combined'));
@@ -54,49 +55,55 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        imgSrc: ["'self'", 'data:', 'https:'],
-        scriptSrc: ["'self'"],
+        imgSrc: ["'self'", 'data:', 'https:', 'http:'],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
-        connectSrc: ["'self'"],
+        connectSrc: ["'self'", 'https:', 'http:'],
         formAction: ["'self'", 'https://webpay3gint.transbank.cl', 'https://webpay3g.transbank.cl'],
         objectSrc: ["'none'"],
-        baseUri: ["'self'"]
+        baseUri: ["'self'"],
+        upgradeInsecureRequests: []
       }
     },
     crossOriginEmbedderPolicy: false,
-    crossOriginResourcePolicy: { policy: "cross-origin" }
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    referrerPolicy: { policy: "strict-origin-when-cross-origin" }
   })
 );
 
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser(process.env.COOKIE_SECRET));
-app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'], maxAge: '1d' }));
-
-let isDbConnected = false;
+app.use(express.static(path.join(process.cwd(), 'public'), { extensions: ['html'], maxAge: '1d' }));
 
 const connectToDatabase = async () => {
-    if (isDbConnected) {
-        return;
+  if (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) {
+    return;
+  }
+  try {
+    await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+      connectTimeoutMS: 10000,
+      maxPoolSize: 10
+    });
+    const migration = await Product.updateMany({ stock: { $exists: false } }, { $set: { stock: 5 } });
+    if (migration.modifiedCount) {
+      console.log(`Se actualizó stock por defecto en ${migration.modifiedCount} productos.`);
     }
-    try {
-        const db = await mongoose.connect(process.env.MONGODB_URI, {
-            serverSelectionTimeoutMS: 5000,
-            socketTimeoutMS: 45000,
-        });
-        isDbConnected = db.connections[0].readyState === 1;
-        const migration = await Product.updateMany({ stock: { $exists: false } }, { $set: { stock: 5 } });
-        if (migration.modifiedCount) {
-            console.log(`Se actualizó stock por defecto en ${migration.modifiedCount} productos.`);
-        }
-    } catch (error) {
-        console.error('Error conectando a la base de datos:', error.message);
-    }
+  } catch (error) {
+    console.error('Error conectando a la base de datos:', error.message);
+    throw error;
+  }
 };
 
 app.use(async (req, res, next) => {
+  try {
     await connectToDatabase();
     next();
+  } catch (error) {
+    res.status(503).json({ message: 'Servicio de base de datos no disponible', success: false });
+  }
 });
 
 function sign(payload) {
@@ -127,7 +134,7 @@ function readAdminToken(token) {
 
 function requireAdmin(req, res, next) {
   if (!readAdminToken(req.cookies[COOKIE_NAME])) {
-    return res.status(401).json({ message: 'No autorizado', code: 'UNAUTHORIZED' });
+    return res.status(401).json({ message: 'No autorizado', code: 'UNAUTHORIZED', success: false });
   }
   next();
 }
@@ -185,7 +192,8 @@ app.get('/api/health', (_req, res) => {
       name: 'Arya Joyas API',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
-      memoryUsage: process.memoryUsage()
+      memoryUsage: process.memoryUsage(),
+      dbState: mongoose.connection.readyState
   });
 });
 
@@ -198,20 +206,21 @@ app.post('/api/admin/login', (req, res) => {
   res.cookie(COOKIE_NAME, createAdminToken(), {
     httpOnly: true,
     sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: ADMIN_SESSION_HOURS * 60 * 60 * 1000
+    secure: process.env.NODE_ENV === 'production' || process.env.VERCEL === '1',
+    maxAge: ADMIN_SESSION_HOURS * 60 * 60 * 1000,
+    path: '/'
   });
   res.json({ ok: true, success: true, message: 'Autenticación exitosa' });
 });
 
 app.post('/api/admin/logout', (_req, res) => {
-  res.clearCookie(COOKIE_NAME);
-  res.json({ ok: true, message: 'Sesión cerrada correctamente' });
+  res.clearCookie(COOKIE_NAME, { path: '/' });
+  res.json({ ok: true, success: true, message: 'Sesión cerrada correctamente' });
 });
 
 app.get('/api/admin/check', (req, res) => {
   const isAuthenticated = readAdminToken(req.cookies[COOKIE_NAME]);
-  res.json({ authenticated: isAuthenticated, timestamp: new Date().toISOString() });
+  res.json({ authenticated: isAuthenticated, timestamp: new Date().toISOString(), success: true });
 });
 
 app.get('/api/settings', async (_req, res, next) => {
@@ -243,7 +252,7 @@ app.put('/api/settings', requireAdmin, async (req, res, next) => {
     ];
     const update = pick(req.body || {}, allowed);
     const settings = await Settings.findOneAndUpdate({ key: 'site' }, update, { new: true, upsert: true });
-    res.json({ data: settings, success: true, message: 'Configuración actualizada' });
+    res.json({ data: settings, success: true, message: 'Configuración actualizada exitosamente' });
   } catch (error) {
     next(error);
   }
@@ -265,10 +274,10 @@ app.get('/api/products', async (req, res, next) => {
 app.get('/api/products/:id', async (req, res, next) => {
     try {
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-            return res.status(400).json({ message: 'ID de producto inválido' });
+            return res.status(400).json({ message: 'ID de producto inválido', success: false });
         }
         const product = await Product.findById(req.params.id);
-        if (!product) return res.status(404).json({ message: 'Producto no encontrado' });
+        if (!product) return res.status(404).json({ message: 'Producto no encontrado', success: false });
         res.json({ data: product, success: true });
     } catch (error) {
         next(error);
@@ -346,7 +355,7 @@ app.delete('/api/products/:id', requireAdmin, async (req, res, next) => {
   try {
     const product = await Product.findByIdAndDelete(req.params.id);
     if (!product) return res.status(404).json({ message: 'Producto no encontrado', success: false });
-    res.json({ ok: true, success: true, message: 'Producto eliminado exitosamente' });
+    res.json({ ok: true, success: true, message: 'Producto eliminado exitosamente', data: product });
   } catch (error) {
     next(error);
   }
@@ -486,7 +495,7 @@ app.get('/api/webpay/order/:buyOrder', async (req, res, next) => {
 });
 
 app.get('*', (_req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
 });
 
 app.use((err, _req, res, _next) => {
