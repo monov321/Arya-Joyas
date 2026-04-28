@@ -383,7 +383,6 @@ async function init() {
   try {
     await Promise.all([loadSettings(), loadProducts()]);
   } catch (error) {
-    console.error(error);
     const grid = $('#productsGrid');
     if (grid) {
       grid.innerHTML = '<div class="loading-card">No se pudo conectar con el catálogo. Revisa que el servidor y MongoDB estén activos.</div>';
