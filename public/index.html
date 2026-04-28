@@ -19,9 +19,9 @@
         <img src="/assets/logo.png" alt="Logo Arya Joyas y Accesorios" />
       </a>
       <nav class="main-nav" aria-label="Navegación principal">
-        <a href="#coleccion" onclick="document.getElementById('coleccion').scrollIntoView({ behavior: 'smooth' }); return false;">Colección</a>
-        <a href="#categorias" onclick="document.getElementById('categorias').scrollIntoView({ behavior: 'smooth' }); return false;">Categorías</a>
-        <a href="#contacto" onclick="document.getElementById('contacto').scrollIntoView({ behavior: 'smooth' }); return false;">Contacto</a>
+        <a href="#coleccion">Colección</a>
+        <a href="#categorias">Categorías</a>
+        <a href="#contacto">Contacto</a>
       </nav>
     </header>
 
@@ -33,7 +33,7 @@
           <p class="eyebrow" id="heroSubtitle">LA DIFERENCIA ESTÁ EN</p>
           <h1 id="heroTitle" class="hero-cursive">Los detalles</h1>
           <div class="hero-actions">
-            <button class="btn btn-primary" type="button" onclick="document.getElementById('coleccion').scrollIntoView({ behavior: 'smooth' })">Ver colección</button>
+            <button class="btn btn-primary" type="button" data-scroll="#coleccion">Ver colección</button>
             <a class="btn btn-secondary-light" id="whatsappHero" href="https://wa.me/56979254260?text=Hola%2C%20me%20interesa%20comprar%20joyas" target="_blank" rel="noopener">Comprar por WhatsApp</a>
           </div>
         </div>
@@ -65,23 +65,23 @@
           </div>
         </div>
         <div class="categories-grid reveal delay-1">
-          <a href="#coleccion" class="category-card" onclick="const btn = document.querySelector('[data-filter=\'Aros\']'); if(btn) btn.click(); document.getElementById('coleccion').scrollIntoView({ behavior: 'smooth' }); return false;">
+          <a href="#coleccion" class="category-card" onclick="const f = document.querySelector('[data-filter=\'Aros\']'); if(f) f.click();">
             <img src="https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=500&q=80" alt="Aros">
             <h3>Aros</h3>
           </a>
-          <a href="#coleccion" class="category-card" onclick="const btn = document.querySelector('[data-filter=\'Collares\']'); if(btn) btn.click(); document.getElementById('coleccion').scrollIntoView({ behavior: 'smooth' }); return false;">
+          <a href="#coleccion" class="category-card" onclick="const f = document.querySelector('[data-filter=\'Collares\']'); if(f) f.click();">
             <img src="https://images.unsplash.com/photo-1599643478514-4a48554cc8ea?auto=format&fit=crop&w=500&q=80" alt="Collares">
             <h3>Collares</h3>
           </a>
-          <a href="#coleccion" class="category-card" onclick="const btn = document.querySelector('[data-filter=\'Pulseras\']'); if(btn) btn.click(); document.getElementById('coleccion').scrollIntoView({ behavior: 'smooth' }); return false;">
+          <a href="#coleccion" class="category-card" onclick="const f = document.querySelector('[data-filter=\'Pulseras\']'); if(f) f.click();">
             <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=500&q=80" alt="Pulseras">
             <h3>Pulseras</h3>
           </a>
-          <a href="#coleccion" class="category-card" onclick="const btn = document.querySelector('[data-filter=\'Anillos\']'); if(btn) btn.click(); document.getElementById('coleccion').scrollIntoView({ behavior: 'smooth' }); return false;">
+          <a href="#coleccion" class="category-card" onclick="const f = document.querySelector('[data-filter=\'Anillos\']'); if(f) f.click();">
             <img src="https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=500&q=80" alt="Anillos">
             <h3>Anillos</h3>
           </a>
-          <a href="#coleccion" class="category-card" onclick="const btn = document.querySelector('[data-filter=\'Sets\']'); if(btn) btn.click(); document.getElementById('coleccion').scrollIntoView({ behavior: 'smooth' }); return false;">
+          <a href="#coleccion" class="category-card" onclick="const f = document.querySelector('[data-filter=\'Sets\']'); if(f) f.click();">
             <img src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=500&q=80" alt="Otros Accesorios">
             <h3>Sets</h3>
           </a>
@@ -123,7 +123,7 @@
         </div>
         <div class="cta-actions">
           <a class="btn btn-primary" id="whatsappCta" href="https://wa.me/56979254260?text=Hola%20Arya%2C%20quiero%20consultar%20por%20sus%20joyas." target="_blank" rel="noopener">Escribir por WhatsApp</a>
-          <button class="btn btn-secondary" type="button" onclick="document.getElementById('coleccion').scrollIntoView({ behavior: 'smooth' })">Ver catálogo</button>
+          <button class="btn btn-secondary" type="button" data-scroll="#coleccion">Ver catálogo</button>
         </div>
       </section>
     </main>
