@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Resultado de pago · Arya Joyas</title>
+    <link rel="icon" href="/assets/logo.png" />
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <main class="payment-result-shell">
+      <section class="payment-result-card">
+        <img src="/assets/logo.png" alt="Arya Joyas" />
+        <p class="eyebrow">Webpay test</p>
+        <h1 id="paymentResultTitle">Revisando pago...</h1>
+        <p id="paymentResultText" class="muted">Estamos cargando el resultado de la transacción.</p>
+
+        <div id="paymentOrderBox" class="payment-order-box is-hidden">
+          <div>
+            <span>Producto</span>
+            <strong id="paymentProductName">—</strong>
+          </div>
+          <div>
+            <span>Cantidad</span>
+            <strong id="paymentQuantity">—</strong>
+          </div>
+          <div>
+            <span>Total</span>
+            <strong id="paymentAmount">—</strong>
+          </div>
+          <div>
+            <span>Orden</span>
+            <strong id="paymentBuyOrder">—</strong>
+          </div>
+        </div>
+
+        <div class="hero-actions payment-result-actions">
+          <a class="btn btn-primary" href="/">Volver al catálogo</a>
+          <a class="btn btn-ghost" id="paymentWhatsapp" href="/">Consultar por WhatsApp</a>
+        </div>
+      </section>
+    </main>
+
+    <script src="/js/pago.js" defer></script>
+  </body>
+</html>

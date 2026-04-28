@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Admin · Arya Joyas</title>
+    <link rel="icon" href="/assets/logo.png" />
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body class="admin-body">
+    <main class="admin-shell">
+      <section id="loginPanel" class="login-card">
+        <img src="/assets/logo.png" alt="Arya Joyas" />
+        <p class="eyebrow">Panel privado</p>
+        <h1>Ingresar al admin</h1>
+        <p class="muted">Esta página no aparece enlazada desde el sitio público y las acciones de edición requieren contraseña.</p>
+        <form id="loginForm" class="stack-form">
+          <label>
+            Clave de admin
+            <input type="password" id="adminPassword" autocomplete="current-password" required />
+          </label>
+          <button class="btn btn-primary" type="submit">Entrar</button>
+          <p class="form-message" id="loginMessage"></p>
+        </form>
+      </section>
+
+      <section id="adminPanel" class="admin-panel is-hidden">
+        <header class="admin-header">
+          <div>
+            <p class="eyebrow">Arya Joyas</p>
+            <h1>Administrador</h1>
+            <p class="muted">Edita textos del sitio, imágenes por URL, productos, precios, stock, visibilidad y destacados.</p>
+          </div>
+          <div class="admin-actions">
+            <a class="btn btn-secondary" href="/" target="_blank" rel="noopener">Ver sitio</a>
+            <button class="btn btn-ghost" id="logoutButton" type="button">Salir</button>
+          </div>
+        </header>
+
+        <div class="admin-grid">
+          <section class="admin-card">
+            <div class="admin-card-title">
+              <div>
+                <h2>Textos del sitio</h2>
+                <span>Inicio, historia y contacto</span>
+              </div>
+            </div>
+            <form id="settingsForm" class="stack-form compact-form">
+              <label>Barra superior<input name="topBarText" /></label>
+              <label>Subtítulo hero<input name="heroSubtitle" /></label>
+              <label>Título hero<input name="heroTitle" /></label>
+              <label>Texto hero<textarea name="heroText" rows="4"></textarea></label>
+              <label>Imagen hero URL<input name="heroImageUrl" placeholder="https://..." /></label>
+              <label>Título historia<input name="aboutTitle" /></label>
+              <label>Texto historia<textarea name="aboutText" rows="4"></textarea></label>
+              <label>Título contacto<input name="ctaTitle" /></label>
+              <label>Texto contacto<textarea name="ctaText" rows="4"></textarea></label>
+              <label>Número WhatsApp<input name="whatsappNumber" placeholder="56979254260" /></label>
+              <label>Instagram URL<input name="instagramUrl" placeholder="https://instagram.com/..." /></label>
+              <label>Email<input name="email" type="email" /></label>
+              <button class="btn btn-primary" type="submit">Guardar textos</button>
+              <p class="form-message" id="settingsMessage"></p>
+            </form>
+          </section>
+
+          <section class="admin-card">
+            <div class="admin-card-title">
+              <div>
+                <h2 id="productFormTitle">Nuevo producto</h2>
+                <span>Agrega o edita productos</span>
+              </div>
+            </div>
+            <form id="productForm" class="stack-form compact-form">
+              <input type="hidden" name="id" />
+              <label>Nombre<input name="name" required /></label>
+              <label>Categoría<input name="category" placeholder="Aros, Collares, Pulseras..." /></label>
+              <label>Material<input name="material" placeholder="Acero, baño dorado, plata 925..." /></label>
+              <label>Precio CLP<input name="price" type="number" min="0" required /></label>
+              <label>Precio antes CLP<input name="compareAtPrice" type="number" min="0" placeholder="Opcional" /></label>
+              <label>Stock<input name="stock" type="number" min="0" required /></label>
+              <label>Imagen URL<input name="imageUrl" placeholder="https://..." /></label>
+              <label>Orden<input name="order" type="number" min="0" value="0" /></label>
+              <label>Descripción<textarea name="description" rows="5"></textarea></label>
+              <div class="check-row">
+                <label><input name="active" type="checkbox" checked /> Visible</label>
+                <label><input name="featured" type="checkbox" /> Destacado</label>
+              </div>
+              <p class="helper-note">El stock se descuenta automáticamente cuando un pago Webpay queda autorizado.</p>
+              <div class="form-actions">
+                <button class="btn btn-primary" type="submit">Guardar producto</button>
+                <button class="btn btn-secondary" id="resetProductForm" type="button">Limpiar</button>
+              </div>
+              <p class="form-message" id="productMessage"></p>
+            </form>
+          </section>
+        </div>
+
+        <section class="admin-card products-admin-card">
+          <div class="admin-card-title inline-title">
+            <div>
+              <h2>Productos en MongoDB</h2>
+              <span>Editar, ocultar, destacar, cambiar stock o borrar</span>
+            </div>
+            <button class="btn btn-secondary" id="refreshProducts" type="button">Actualizar</button>
+          </div>
+          <div id="adminProducts" class="admin-products"></div>
+        </section>
+      </section>
+    </main>
+
+    <template id="adminProductTemplate">
+      <article class="admin-product-row">
+        <img class="admin-product-img" alt="" />
+        <div class="admin-product-info">
+          <strong class="admin-product-name"></strong>
+          <span class="admin-product-detail"></span>
+          <span class="admin-product-status"></span>
+        </div>
+        <div class="admin-product-actions">
+          <button class="btn btn-small edit-btn" type="button">Editar</button>
+          <button class="btn btn-small danger-btn delete-btn" type="button">Borrar</button>
+        </div>
+      </article>
+    </template>
+
+    <script src="/js/admin.js" defer></script>
+  </body>
+</html>
