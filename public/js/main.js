@@ -322,13 +322,15 @@ function setupCarouselControls() {
 async function loadSettings() {
   const response = await fetch('/api/settings');
   if (!response.ok) throw new Error('No se pudieron cargar los textos del sitio.');
-  applySettings(await response.json());
+  const json = await response.json();
+  applySettings(json.data || json);
 }
 
 async function loadProducts() {
   const response = await fetch('/api/products?active=true');
   if (!response.ok) throw new Error('No se pudieron cargar los productos.');
-  state.products = await response.json();
+  const json = await response.json();
+  state.products = json.data || [];
   renderCarousel();
   renderProducts();
 }
