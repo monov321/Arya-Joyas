@@ -213,9 +213,65 @@ async function startWebpayPayment() {
   }
 }
 
+function createProductNode(product) {
+  const template = $('#productCardTemplate');
+  const node = template.content.cloneNode(true);
+  const card = node.querySelector('.product-card');
+  const image = node.querySelector('.product-image');
+  const stock = stockCopy(product);
+  const stockCount = safeStock(product);
+  const isOut = stockCount <= 0;
+
+  image.src = product.imageUrl || fallbackImage;
+  image.alt = product.name;
+  image.onerror = () => {
+    image.src = fallbackImage;
+  };
+
+  card.classList.toggle('is-sold-out', isOut);
+  node.querySelector('.badge-category').textContent = product.featured ? 'Destacado' : product.category || 'Arya';
+
+  const badgeStock = node.querySelector('.badge-stock');
+  badgeStock.textContent = stock.label;
+  badgeStock.className = `badge-stock ${stock.className}`.trim();
+
+  node.querySelector('.product-category').textContent = product.category || 'Joyas';
+  node.querySelector('.product-material').textContent = product.material || '';
+  node.querySelector('.product-name').textContent = product.name;
+  node.querySelector('.product-description').textContent = product.description || 'Producto Arya disponible para consultar.';
+  node.querySelector('.price').textContent = money.format(product.price || 0);
+  node.querySelector('.stock-label').textContent = stockLine(product);
+
+  const compare = node.querySelector('.compare-price');
+  if (product.compareAtPrice) compare.textContent = money.format(product.compareAtPrice);
+  else compare.remove();
+
+  const detailButton = node.querySelector('.product-detail-btn');
+  detailButton.addEventListener('click', () => openProductModal(product));
+  detailButton.textContent = isOut ? 'Ver detalle' : 'Ver información';
+
+  const whatsappButton = node.querySelector('.whatsapp-product');
+  whatsappButton.href = whatsappLink(state.settings, product.name);
+
+  card.tabIndex = 0;
+  card.setAttribute('role', 'button');
+  card.setAttribute('aria-label', `Ver información de ${product.name}`);
+  card.addEventListener('click', (event) => {
+    if (event.target.closest('a, button')) return;
+    openProductModal(product);
+  });
+  card.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      openProductModal(product);
+    }
+  });
+
+  return node;
+}
+
 function renderProducts() {
   const grid = $('#productsGrid');
-  const template = $('#productCardTemplate');
   grid.innerHTML = '';
 
   const products = state.products.filter(productMatchesFilter);
@@ -226,59 +282,40 @@ function renderProducts() {
   }
 
   products.forEach((product) => {
-    const node = template.content.cloneNode(true);
-    const card = node.querySelector('.product-card');
-    const image = node.querySelector('.product-image');
-    const stock = stockCopy(product);
-    const stockCount = safeStock(product);
-    const isOut = stockCount <= 0;
+    grid.appendChild(createProductNode(product));
+  });
+}
 
-    image.src = product.imageUrl || fallbackImage;
-    image.alt = product.name;
-    image.onerror = () => {
-      image.src = fallbackImage;
-    };
+function renderCarousel() {
+  const track = $('#carouselTrack');
+  if (!track) return;
+  track.innerHTML = '';
 
-    card.classList.toggle('is-sold-out', isOut);
-    node.querySelector('.badge-category').textContent = product.featured ? 'Destacado' : product.category || 'Arya';
+  if (!state.products.length) {
+    track.innerHTML = '<div class="loading-card">No hay productos disponibles.</div>';
+    return;
+  }
 
-    const badgeStock = node.querySelector('.badge-stock');
-    badgeStock.textContent = stock.label;
-    badgeStock.className = `badge-stock ${stock.className}`.trim();
+  state.products.forEach((product) => {
+    track.appendChild(createProductNode(product));
+  });
+}
 
-    node.querySelector('.product-category').textContent = product.category || 'Joyas';
-    node.querySelector('.product-material').textContent = product.material || '';
-    node.querySelector('.product-name').textContent = product.name;
-    node.querySelector('.product-description').textContent = product.description || 'Producto Arya disponible para consultar.';
-    node.querySelector('.price').textContent = money.format(product.price || 0);
-    node.querySelector('.stock-label').textContent = stockLine(product);
+function setupCarouselControls() {
+  const track = $('#carouselTrack');
+  const prev = $('.prev-btn');
+  const next = $('.next-btn');
 
-    const compare = node.querySelector('.compare-price');
-    if (product.compareAtPrice) compare.textContent = money.format(product.compareAtPrice);
-    else compare.remove();
+  if (!track || !prev || !next) return;
 
-    const detailButton = node.querySelector('.product-detail-btn');
-    detailButton.addEventListener('click', () => openProductModal(product));
-    detailButton.textContent = isOut ? 'Ver detalle' : 'Ver información';
+  const scrollAmount = 320;
 
-    const whatsappButton = node.querySelector('.whatsapp-product');
-    whatsappButton.href = whatsappLink(state.settings, product.name);
+  prev.addEventListener('click', () => {
+    track.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+  });
 
-    card.tabIndex = 0;
-    card.setAttribute('role', 'button');
-    card.setAttribute('aria-label', `Ver información de ${product.name}`);
-    card.addEventListener('click', (event) => {
-      if (event.target.closest('a, button')) return;
-      openProductModal(product);
-    });
-    card.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        openProductModal(product);
-      }
-    });
-
-    grid.appendChild(node);
+  next.addEventListener('click', () => {
+    track.scrollBy({ left: scrollAmount, behavior: 'smooth' });
   });
 }
 
@@ -292,6 +329,7 @@ async function loadProducts() {
   const response = await fetch('/api/products?active=true');
   if (!response.ok) throw new Error('No se pudieron cargar los productos.');
   state.products = await response.json();
+  renderCarousel();
   renderProducts();
 }
 
@@ -339,6 +377,7 @@ async function init() {
   setupFilters();
   setupProductModal();
   setupSmoothScroll();
+  setupCarouselControls();
   try {
     await Promise.all([loadSettings(), loadProducts()]);
   } catch (error) {
@@ -346,6 +385,10 @@ async function init() {
     const grid = $('#productsGrid');
     if (grid) {
       grid.innerHTML = '<div class="loading-card">No se pudo conectar con el catálogo. Revisa que el servidor y MongoDB estén activos.</div>';
+    }
+    const track = $('#carouselTrack');
+    if (track) {
+      track.innerHTML = '<div class="loading-card">Error de conexión.</div>';
     }
   }
 }
