@@ -40,9 +40,13 @@ function showAdmin(authenticated) {
 }
 
 async function checkAuth() {
-  const data = await request('/api/admin/check');
-  showAdmin(data.authenticated);
-  if (data.authenticated) await loadAdminData();
+  try {
+    const response = await request('/api/admin/check');
+    showAdmin(response.authenticated);
+    if (response.authenticated) await loadAdminData();
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 function fillSettingsForm(settings) {
@@ -53,9 +57,13 @@ function fillSettingsForm(settings) {
 }
 
 async function loadSettings() {
-  const settings = await request('/api/settings');
-  adminState.settings = settings;
-  fillSettingsForm(settings);
+  try {
+    const response = await request('/api/settings');
+    adminState.settings = response.data || {};
+    fillSettingsForm(adminState.settings);
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 function getProductPayload(form) {
@@ -105,8 +113,8 @@ function renderAdminProducts() {
   const template = $('#adminProductTemplate');
   container.innerHTML = '';
 
-  if (!adminState.products.length) {
-    container.innerHTML = '<div class="loading-card">Aún no hay productos.</div>';
+  if (!Array.isArray(adminState.products) || !adminState.products.length) {
+    container.innerHTML = '<div class="loading-card">Aún no hay productos o no se pudieron cargar.</div>';
     return;
   }
 
@@ -144,8 +152,15 @@ function renderAdminProducts() {
 }
 
 async function loadProducts() {
-  adminState.products = await request('/api/products');
-  renderAdminProducts();
+  try {
+    const response = await request('/api/products');
+    adminState.products = response.data || [];
+    renderAdminProducts();
+  } catch (error) {
+    console.error(error);
+    adminState.products = [];
+    renderAdminProducts();
+  }
 }
 
 async function loadAdminData() {
@@ -170,8 +185,13 @@ function setupEvents() {
   });
 
   $('#logoutButton').addEventListener('click', async () => {
-    await request('/api/admin/logout', { method: 'POST' });
-    showAdmin(false);
+    try {
+      await request('/api/admin/logout', { method: 'POST' });
+      showAdmin(false);
+      $('#adminPassword').value = '';
+    } catch (error) {
+      console.error(error);
+    }
   });
 
   $('#settingsForm').addEventListener('submit', async (event) => {
@@ -179,12 +199,12 @@ function setupEvents() {
     const payload = Object.fromEntries(new FormData(event.currentTarget).entries());
     setMessage('#settingsMessage', 'Guardando...');
     try {
-      const settings = await request('/api/settings', {
+      const response = await request('/api/settings', {
         method: 'PUT',
         body: JSON.stringify(payload)
       });
-      adminState.settings = settings;
-      setMessage('#settingsMessage', 'Textos guardados.');
+      adminState.settings = response.data || {};
+      setMessage('#settingsMessage', 'Textos guardados correctamente.');
     } catch (error) {
       setMessage('#settingsMessage', error.message, false);
     }
@@ -203,7 +223,7 @@ function setupEvents() {
         setMessage('#productMessage', 'Producto actualizado.');
       } else {
         await request('/api/products', { method: 'POST', body: JSON.stringify(payload) });
-        setMessage('#productMessage', 'Producto creado.');
+        setMessage('#productMessage', 'Producto creado exitosamente.');
       }
       fillProductForm(null);
       await loadProducts();
