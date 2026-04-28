@@ -30,7 +30,6 @@ function whatsappLink(settings, productName = '') {
   return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
 }
 
-// FIX 3: stock con fallback seguro contra undefined/NaN
 function safeStock(product) {
   return Number(product.stock ?? 0) || 0;
 }
@@ -73,7 +72,6 @@ function applySettings(settings) {
   if (instagram && settings.instagramUrl) instagram.href = settings.instagramUrl;
 }
 
-// FIX 4: comparación de categoría normalizada (sin importar mayúsculas/minúsculas)
 function productMatchesFilter(product) {
   if (state.activeFilter === 'all') return true;
   return (product.category || '').toLowerCase() === state.activeFilter.toLowerCase();
@@ -86,7 +84,6 @@ function setPaymentMessage(text, ok = true) {
   element.style.color = ok ? '#2d7a55' : '#a33b50';
 }
 
-// FIX 5: focus trap dentro del modal
 function trapFocus(modal) {
   const focusable = modal.querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), [tabindex]:not([tabindex="-1"])');
   const first = focusable[0];
@@ -105,7 +102,6 @@ function trapFocus(modal) {
         first.focus();
       }
     }
-    // limpiar listener al cerrar
     if (!modal.classList.contains('is-open')) {
       modal.removeEventListener('keydown', handler);
     }
@@ -153,7 +149,6 @@ function openProductModal(product) {
   modal.setAttribute('aria-hidden', 'false');
   document.body.classList.add('modal-open');
 
-  // FIX 5: activar focus trap y mover foco al elemento correcto
   trapFocus(modal);
   (webpayButton.disabled ? $('#modalWhatsapp') : webpayButton)?.focus();
 }
@@ -312,18 +307,14 @@ function setupFilters() {
 }
 
 function setupProductModal() {
-  // cerrar con backdrop y botón X
   document.querySelectorAll('[data-close-modal]').forEach((element) => {
     element.addEventListener('click', closeProductModal);
   });
 
-  // cerrar con Escape
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') closeProductModal();
   });
 
-  // FIX 2: delegación de evento en lugar de buscar el botón directo
-  // así funciona aunque el modal no esté visible al momento del setup
   document.addEventListener('click', (event) => {
     if (event.target.id === 'webpayButton' && !event.target.disabled) {
       startWebpayPayment();
@@ -331,9 +322,23 @@ function setupProductModal() {
   });
 }
 
+function setupSmoothScroll() {
+  document.querySelectorAll('a[href^="#"], button[data-scroll]').forEach(element => {
+    element.addEventListener('click', function(e) {
+      e.preventDefault();
+      const targetId = this.getAttribute('href') || this.getAttribute('data-scroll');
+      const targetElement = document.querySelector(targetId);
+      if (targetElement) {
+        targetElement.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  });
+}
+
 async function init() {
   setupFilters();
   setupProductModal();
+  setupSmoothScroll();
   try {
     await Promise.all([loadSettings(), loadProducts()]);
   } catch (error) {
