@@ -6,6 +6,9 @@
     <meta name="description" content="Arya Joyas y Accesorios: catálogo de joyas delicadas, femeninas y luminosas." />
     <title>Arya Joyas y Accesorios</title>
     <link rel="icon" href="/assets/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/styles.css" />
   </head>
   <body>
@@ -17,49 +20,21 @@
       </a>
       <nav class="main-nav" aria-label="Navegación principal">
         <a href="#coleccion" onclick="document.getElementById('coleccion').scrollIntoView({ behavior: 'smooth' }); return false;">Colección</a>
-        <a href="#historia" onclick="document.getElementById('historia').scrollIntoView({ behavior: 'smooth' }); return false;">Historia</a>
+        <a href="#categorias" onclick="document.getElementById('categorias').scrollIntoView({ behavior: 'smooth' }); return false;">Categorías</a>
         <a href="#contacto" onclick="document.getElementById('contacto').scrollIntoView({ behavior: 'smooth' }); return false;">Contacto</a>
       </nav>
     </header>
 
     <main>
-      <section class="hero section-wrap">
-        <div class="hero-copy reveal">
-          <p class="eyebrow" id="heroSubtitle">ARYA JOYAS Y ACCESORIOS</p>
-          <h1 id="heroTitle">Joyas con aire editorial y brillo sutil</h1>
-          <p id="heroText">
-            Una vitrina más elegante, femenina y limpia para mostrar cada pieza con protagonismo. Puedes editar textos,
-            precios, stock e imágenes desde el panel privado.
-          </p>
-
+      <section class="hero-banner">
+        <img class="hero-bg" src="https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=1200&q=80" alt="Joyas destacadas Arya" />
+        <div class="hero-overlay"></div>
+        <div class="hero-content reveal">
+          <p class="eyebrow" id="heroSubtitle">LA DIFERENCIA ESTÁ EN</p>
+          <h1 id="heroTitle" class="hero-cursive">Los detalles</h1>
           <div class="hero-actions">
             <button class="btn btn-primary" type="button" onclick="document.getElementById('coleccion').scrollIntoView({ behavior: 'smooth' })">Ver colección</button>
-            <a class="btn btn-secondary" id="whatsappHero" href="https://wa.me/56979254260?text=Hola%2C%20me%20interesa%20comprar%20joyas" target="_blank" rel="noopener">Comprar por WhatsApp</a>
-          </div>
-
-          <div class="hero-notes">
-            <article>
-              <strong>Stock real</strong>
-              <span>Cada producto muestra unidades disponibles.</span>
-            </article>
-            <article>
-              <strong>Webpay test</strong>
-              <span>Paga desde la ficha del producto.</span>
-            </article>
-          </div>
-        </div>
-
-        <div class="hero-visual reveal delay-1">
-          <div class="hero-photo-card card-large">
-            <img
-              id="heroImage"
-              src="https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=1200&q=80"
-              alt="Joya destacada Arya"
-            />
-          </div>
-          <div class="hero-floating-card card-mini">
-            <span class="pill">Curado con detalle</span>
-            <strong>Piezas suaves, femeninas y fáciles de combinar</strong>
+            <a class="btn btn-secondary-light" id="whatsappHero" href="https://wa.me/56979254260?text=Hola%2C%20me%20interesa%20comprar%20joyas" target="_blank" rel="noopener">Comprar por WhatsApp</a>
           </div>
         </div>
       </section>
@@ -80,6 +55,37 @@
           <h3>Atención cercana</h3>
           <p>Complementa la venta online con contacto directo por WhatsApp e Instagram.</p>
         </article>
+      </section>
+
+      <section id="categorias" class="categories section-wrap">
+        <div class="section-heading reveal">
+          <div>
+            <p class="eyebrow">Descubre</p>
+            <h2>Nuestras Categorías</h2>
+          </div>
+        </div>
+        <div class="categories-grid reveal delay-1">
+          <a href="#coleccion" class="category-card" onclick="const btn = document.querySelector('[data-filter=\'Aros\']'); if(btn) btn.click(); document.getElementById('coleccion').scrollIntoView({ behavior: 'smooth' }); return false;">
+            <img src="https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=500&q=80" alt="Aros">
+            <h3>Aros</h3>
+          </a>
+          <a href="#coleccion" class="category-card" onclick="const btn = document.querySelector('[data-filter=\'Collares\']'); if(btn) btn.click(); document.getElementById('coleccion').scrollIntoView({ behavior: 'smooth' }); return false;">
+            <img src="https://images.unsplash.com/photo-1599643478514-4a48554cc8ea?auto=format&fit=crop&w=500&q=80" alt="Collares">
+            <h3>Collares</h3>
+          </a>
+          <a href="#coleccion" class="category-card" onclick="const btn = document.querySelector('[data-filter=\'Pulseras\']'); if(btn) btn.click(); document.getElementById('coleccion').scrollIntoView({ behavior: 'smooth' }); return false;">
+            <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=500&q=80" alt="Pulseras">
+            <h3>Pulseras</h3>
+          </a>
+          <a href="#coleccion" class="category-card" onclick="const btn = document.querySelector('[data-filter=\'Anillos\']'); if(btn) btn.click(); document.getElementById('coleccion').scrollIntoView({ behavior: 'smooth' }); return false;">
+            <img src="https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=500&q=80" alt="Anillos">
+            <h3>Anillos</h3>
+          </a>
+          <a href="#coleccion" class="category-card" onclick="const btn = document.querySelector('[data-filter=\'Sets\']'); if(btn) btn.click(); document.getElementById('coleccion').scrollIntoView({ behavior: 'smooth' }); return false;">
+            <img src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=500&q=80" alt="Otros Accesorios">
+            <h3>Sets</h3>
+          </a>
+        </div>
       </section>
 
       <section id="coleccion" class="collection section-wrap">
@@ -104,27 +110,6 @@
 
         <div id="productsGrid" class="products-grid" aria-live="polite">
           <div class="loading-card">Cargando productos...</div>
-        </div>
-      </section>
-
-      <section id="historia" class="editorial section-wrap">
-        <div class="editorial-visual reveal">
-          <div class="editorial-image-shell">
-            <img src="/assets/logo.png" alt="Logo Arya" />
-          </div>
-        </div>
-        <div class="editorial-copy reveal delay-1">
-          <p class="eyebrow">Nuestra esencia</p>
-          <h2 id="aboutTitle">Diseño suave, selección cuidadosa</h2>
-          <p id="aboutText">
-            Arya nace para reunir joyas versátiles, delicadas y luminosas. La experiencia se inspira en una estética más
-            premium: mucho aire, foco en el producto y una navegación simple.
-          </p>
-          <div class="editorial-points">
-            <span>Joyas para regalar o usar todos los días</span>
-            <span>Edición simple desde admin</span>
-            <span>Stock editable producto por producto</span>
-          </div>
         </div>
       </section>
 
