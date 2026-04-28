@@ -6,6 +6,10 @@ const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
 const path = require('path');
+const cors = require('cors');
+const compression = require('compression');
+const morgan = require('morgan');
+
 const Product = require('./models/Product');
 const Settings = require('./models/Settings');
 const Order = require('./models/Order');
@@ -31,6 +35,20 @@ for (const key of requiredEnv) {
 
 app.set('trust proxy', 1);
 
+app.use(cors({
+    origin: process.env.PUBLIC_BASE_URL || '*',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
+
+app.use(compression({
+    level: 6,
+    threshold: 100 * 1024
+}));
+
+app.use(morgan('combined'));
+
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -44,13 +62,42 @@ app.use(
         objectSrc: ["'none'"],
         baseUri: ["'self'"]
       }
-    }
+    },
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" }
   })
 );
-app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(cookieParser(process.env.COOKIE_SECRET));
+app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'], maxAge: '1d' }));
+
+let isDbConnected = false;
+
+const connectToDatabase = async () => {
+    if (isDbConnected) {
+        return;
+    }
+    try {
+        const db = await mongoose.connect(process.env.MONGODB_URI, {
+            serverSelectionTimeoutMS: 5000,
+            socketTimeoutMS: 45000,
+        });
+        isDbConnected = db.connections[0].readyState === 1;
+        const migration = await Product.updateMany({ stock: { $exists: false } }, { $set: { stock: 5 } });
+        if (migration.modifiedCount) {
+            console.log(`Se actualizó stock por defecto en ${migration.modifiedCount} productos.`);
+        }
+    } catch (error) {
+        console.error('Error conectando a la base de datos:', error.message);
+    }
+};
+
+app.use(async (req, res, next) => {
+    await connectToDatabase();
+    next();
+});
 
 function sign(payload) {
   return crypto.createHmac('sha256', process.env.COOKIE_SECRET || 'dev-secret').update(payload).digest('base64url');
@@ -80,7 +127,7 @@ function readAdminToken(token) {
 
 function requireAdmin(req, res, next) {
   if (!readAdminToken(req.cookies[COOKIE_NAME])) {
-    return res.status(401).json({ message: 'No autorizado' });
+    return res.status(401).json({ message: 'No autorizado', code: 'UNAUTHORIZED' });
   }
   next();
 }
@@ -133,13 +180,19 @@ async function getSettings() {
 }
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, name: 'Arya Joyas API' });
+  res.json({
+      ok: true,
+      name: 'Arya Joyas API',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      memoryUsage: process.memoryUsage()
+  });
 });
 
 app.post('/api/admin/login', (req, res) => {
   const { password } = req.body || {};
   if (!process.env.ADMIN_PASSWORD || password !== process.env.ADMIN_PASSWORD) {
-    return res.status(401).json({ message: 'Clave incorrecta' });
+    return res.status(401).json({ message: 'Clave incorrecta', success: false });
   }
 
   res.cookie(COOKIE_NAME, createAdminToken(), {
@@ -148,22 +201,23 @@ app.post('/api/admin/login', (req, res) => {
     secure: process.env.NODE_ENV === 'production',
     maxAge: ADMIN_SESSION_HOURS * 60 * 60 * 1000
   });
-  res.json({ ok: true });
+  res.json({ ok: true, success: true, message: 'Autenticación exitosa' });
 });
 
 app.post('/api/admin/logout', (_req, res) => {
   res.clearCookie(COOKIE_NAME);
-  res.json({ ok: true });
+  res.json({ ok: true, message: 'Sesión cerrada correctamente' });
 });
 
 app.get('/api/admin/check', (req, res) => {
-  res.json({ authenticated: readAdminToken(req.cookies[COOKIE_NAME]) });
+  const isAuthenticated = readAdminToken(req.cookies[COOKIE_NAME]);
+  res.json({ authenticated: isAuthenticated, timestamp: new Date().toISOString() });
 });
 
 app.get('/api/settings', async (_req, res, next) => {
   try {
     const settings = await getSettings();
-    res.json(settings);
+    res.json({ data: settings, success: true });
   } catch (error) {
     next(error);
   }
@@ -183,11 +237,13 @@ app.put('/api/settings', requireAdmin, async (req, res, next) => {
       'ctaText',
       'whatsappNumber',
       'instagramUrl',
-      'email'
+      'email',
+      'address',
+      'phoneNumber'
     ];
     const update = pick(req.body || {}, allowed);
     const settings = await Settings.findOneAndUpdate({ key: 'site' }, update, { new: true, upsert: true });
-    res.json(settings);
+    res.json({ data: settings, success: true, message: 'Configuración actualizada' });
   } catch (error) {
     next(error);
   }
@@ -198,11 +254,25 @@ app.get('/api/products', async (req, res, next) => {
     const filter = {};
     if (req.query.active === 'true') filter.active = true;
     if (req.query.featured === 'true') filter.featured = true;
+    if (req.query.category) filter.category = req.query.category;
     const products = await Product.find(filter).sort({ order: 1, createdAt: -1 });
-    res.json(products);
+    res.json({ data: products, count: products.length, success: true });
   } catch (error) {
     next(error);
   }
+});
+
+app.get('/api/products/:id', async (req, res, next) => {
+    try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ message: 'ID de producto inválido' });
+        }
+        const product = await Product.findById(req.params.id);
+        if (!product) return res.status(404).json({ message: 'Producto no encontrado' });
+        res.json({ data: product, success: true });
+    } catch (error) {
+        next(error);
+    }
 });
 
 app.post('/api/products', requireAdmin, async (req, res, next) => {
@@ -218,7 +288,9 @@ app.post('/api/products', requireAdmin, async (req, res, next) => {
       'stock',
       'active',
       'featured',
-      'order'
+      'order',
+      'sku',
+      'weight'
     ];
     const body = pick(req.body || {}, allowed);
     body.price = normalizeNumber(body.price, 0);
@@ -226,7 +298,7 @@ app.post('/api/products', requireAdmin, async (req, res, next) => {
     body.stock = Math.max(0, normalizeNumber(body.stock, 0));
     body.order = normalizeNumber(body.order, 0);
     const product = await Product.create(body);
-    res.status(201).json(product);
+    res.status(201).json({ data: product, success: true, message: 'Producto creado exitosamente' });
   } catch (error) {
     next(error);
   }
@@ -245,7 +317,9 @@ app.put('/api/products/:id', requireAdmin, async (req, res, next) => {
       'stock',
       'active',
       'featured',
-      'order'
+      'order',
+      'sku',
+      'weight'
     ];
     const body = pick(req.body || {}, allowed);
     if (Object.prototype.hasOwnProperty.call(body, 'price')) body.price = normalizeNumber(body.price, 0);
@@ -261,8 +335,8 @@ app.put('/api/products/:id', requireAdmin, async (req, res, next) => {
       new: true,
       runValidators: true
     });
-    if (!product) return res.status(404).json({ message: 'Producto no encontrado' });
-    res.json(product);
+    if (!product) return res.status(404).json({ message: 'Producto no encontrado', success: false });
+    res.json({ data: product, success: true, message: 'Producto actualizado exitosamente' });
   } catch (error) {
     next(error);
   }
@@ -271,8 +345,8 @@ app.put('/api/products/:id', requireAdmin, async (req, res, next) => {
 app.delete('/api/products/:id', requireAdmin, async (req, res, next) => {
   try {
     const product = await Product.findByIdAndDelete(req.params.id);
-    if (!product) return res.status(404).json({ message: 'Producto no encontrado' });
-    res.json({ ok: true });
+    if (!product) return res.status(404).json({ message: 'Producto no encontrado', success: false });
+    res.json({ ok: true, success: true, message: 'Producto eliminado exitosamente' });
   } catch (error) {
     next(error);
   }
@@ -282,21 +356,21 @@ app.post('/api/webpay/create', async (req, res, next) => {
   try {
     const { productId } = req.body || {};
     if (!mongoose.Types.ObjectId.isValid(productId)) {
-      return res.status(400).json({ message: 'Producto inválido.' });
+      return res.status(400).json({ message: 'Producto inválido.', success: false });
     }
 
     const requestedQuantity = Math.max(1, Math.min(10, normalizeNumber(req.body?.quantity, 1)));
     const product = await Product.findOne({ _id: productId, active: true });
 
-    if (!product) return res.status(404).json({ message: 'Producto no encontrado o no visible.' });
+    if (!product) return res.status(404).json({ message: 'Producto no encontrado o no visible.', success: false });
     if (!product.price || product.price < 1) {
-      return res.status(400).json({ message: 'Este producto no tiene un precio válido para pagar.' });
+      return res.status(400).json({ message: 'Este producto no tiene un precio válido para pagar.', success: false });
     }
     if (product.stock <= 0) {
-      return res.status(400).json({ message: 'Este producto está agotado.' });
+      return res.status(400).json({ message: 'Este producto está agotado.', success: false });
     }
     if (requestedQuantity > product.stock) {
-      return res.status(400).json({ message: `Solo quedan ${product.stock} unidades disponibles.` });
+      return res.status(400).json({ message: `Solo quedan ${product.stock} unidades disponibles.`, success: false });
     }
 
     const amount = Math.round(product.price * requestedQuantity);
@@ -330,7 +404,8 @@ app.post('/api/webpay/create', async (req, res, next) => {
       buyOrder,
       amount,
       token: createResponse.token,
-      url: createResponse.url
+      url: createResponse.url,
+      success: true
     });
   } catch (error) {
     next(error);
@@ -403,8 +478,8 @@ app.all('/webpay/return', async (req, res) => {
 app.get('/api/webpay/order/:buyOrder', async (req, res, next) => {
   try {
     const order = await Order.findOne({ buyOrder: req.params.buyOrder }).select('-token -sessionId -__v');
-    if (!order) return res.status(404).json({ message: 'Orden no encontrada.' });
-    res.json(order);
+    if (!order) return res.status(404).json({ message: 'Orden no encontrada.', success: false });
+    res.json({ data: order, success: true });
   } catch (error) {
     next(error);
   }
@@ -416,17 +491,14 @@ app.get('*', (_req, res) => {
 
 app.use((err, _req, res, _next) => {
   console.error(err);
-  if (err.name === 'CastError') return res.status(400).json({ message: 'ID inválido' });
-  if (err.name === 'ValidationError') return res.status(400).json({ message: err.message });
-  res.status(500).json({ message: 'Error del servidor' });
+  if (err.name === 'CastError') return res.status(400).json({ message: 'ID inválido', success: false, error: err.message });
+  if (err.name === 'ValidationError') return res.status(400).json({ message: err.message, success: false, error: err.errors });
+  res.status(500).json({ message: 'Error interno del servidor', success: false, error: err.message });
 });
 
 async function start() {
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log('MongoDB conectado');
-    const migration = await Product.updateMany({ stock: { $exists: false } }, { $set: { stock: 5 } });
-    if (migration.modifiedCount) console.log(`Se actualizó stock por defecto en ${migration.modifiedCount} productos.`);
+    await connectToDatabase();
     app.listen(PORT, () => console.log(`Arya Joyas listo en http://localhost:${PORT}`));
   } catch (error) {
     console.error('No se pudo iniciar la app:', error.message);
@@ -434,4 +506,8 @@ async function start() {
   }
 }
 
-start();
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+    start();
+}
+
+module.exports = app;
