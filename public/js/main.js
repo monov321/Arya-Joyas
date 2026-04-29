@@ -60,9 +60,6 @@ function applySettings(settings) {
   setText('#ctaText', settings.ctaText);
   setText('#footerEmail', settings.email);
 
-  const heroImage = $('#heroImage');
-  if (heroImage && settings.heroImageUrl) heroImage.src = settings.heroImageUrl;
-
   const whatsappHero = $('#whatsappHero');
   const whatsappCta = $('#whatsappCta');
   if (whatsappHero) whatsappHero.href = whatsappLink(settings);
@@ -319,6 +316,62 @@ function setupCarouselControls() {
   });
 }
 
+// ── Hero Carousel ──────────────────────────────────────────────────────────────
+let heroCarouselTimer = null;
+
+function buildHeroCarousel(products) {
+  const slidesEl = document.getElementById('heroSlides');
+  const dotsEl   = document.getElementById('heroDots');
+  if (!slidesEl || !dotsEl) return;
+
+  // Usa los primeros 8 productos que tengan imagen
+  const pool = products.filter(p => p.imageUrl).slice(0, 8);
+  if (!pool.length) return; // sin imágenes, el fondo queda oscuro (color del hero-banner)
+
+  slidesEl.innerHTML = '';
+  dotsEl.innerHTML   = '';
+
+  pool.forEach((product, i) => {
+    // slide
+    const slide = document.createElement('div');
+    slide.className = 'hero-slide' + (i === 0 ? ' is-active' : '');
+    slide.style.backgroundImage = `url('${product.imageUrl}')`;
+    slide.setAttribute('aria-label', product.name);
+    slidesEl.appendChild(slide);
+
+    // dot
+    const dot = document.createElement('span');
+    dot.className = 'hero-dot' + (i === 0 ? ' is-active' : '');
+    dotsEl.appendChild(dot);
+  });
+
+  let current = 0;
+  const slides = slidesEl.querySelectorAll('.hero-slide');
+  const dots   = dotsEl.querySelectorAll('.hero-dot');
+
+  function goTo(index) {
+    slides[current].classList.remove('is-active');
+    dots[current].classList.remove('is-active');
+    current = (index + slides.length) % slides.length;
+    slides[current].classList.add('is-active');
+    dots[current].classList.add('is-active');
+  }
+
+  // Permite navegar haciendo clic en los dots
+  dots.forEach((dot, i) => {
+    dot.addEventListener('click', () => {
+      clearInterval(heroCarouselTimer);
+      goTo(i);
+      heroCarouselTimer = setInterval(() => goTo(current + 1), 2700);
+    });
+  });
+
+  // Limpia timer previo si se recarga
+  if (heroCarouselTimer) clearInterval(heroCarouselTimer);
+  heroCarouselTimer = setInterval(() => goTo(current + 1), 2700);
+}
+// ──────────────────────────────────────────────────────────────────────────────
+
 async function loadSettings() {
   const response = await fetch('/api/settings');
   if (!response.ok) throw new Error('No se pudieron cargar los textos del sitio.');
@@ -331,6 +384,7 @@ async function loadProducts() {
   if (!response.ok) throw new Error('No se pudieron cargar los productos.');
   const json = await response.json();
   state.products = json.data || [];
+  buildHeroCarousel(state.products); // ← carrusel hero con fotos reales
   renderCarousel();
   renderProducts();
 }
