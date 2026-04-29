@@ -337,9 +337,10 @@ function setupCarouselControls() {
 let heroCarouselTimer = null;
 
 function buildHeroCarousel(products) {
+  const heroSection = document.getElementById('heroCarousel');
   const slidesEl = document.getElementById('heroSlides');
   const dotsEl = document.getElementById('heroDots');
-  if (!slidesEl || !dotsEl) return;
+  if (!slidesEl || !dotsEl || !heroSection) return;
 
   const pool = products.filter(p => p.imageUrl).slice(0, 8);
   if (!pool.length) return; 
@@ -351,23 +352,6 @@ function buildHeroCarousel(products) {
     const slide = document.createElement('div');
     slide.className = 'hero-slide' + (i === 0 ? ' is-active' : '');
     slide.style.backgroundImage = `url('${product.imageUrl}')`;
-    
-    slide.style.cursor = 'pointer';
-    slide.setAttribute('role', 'button');
-    slide.setAttribute('aria-label', `Ver información de ${product.name}`);
-    slide.tabIndex = 0;
-
-    slide.addEventListener('click', () => {
-      openProductModal(product);
-    });
-
-    slide.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        openProductModal(product);
-      }
-    });
-
     slidesEl.appendChild(slide);
 
     const dot = document.createElement('span');
@@ -389,12 +373,27 @@ function buildHeroCarousel(products) {
   }
 
   dots.forEach((dot, i) => {
-    dot.addEventListener('click', () => {
+    dot.addEventListener('click', (event) => {
+      event.stopPropagation();
       if (heroCarouselTimer) clearInterval(heroCarouselTimer);
       goTo(i);
       heroCarouselTimer = setInterval(() => goTo(current + 1), 2700);
     });
   });
+
+  heroSection.style.cursor = 'pointer';
+  if (heroSection._heroClickHandler) {
+    heroSection.removeEventListener('click', heroSection._heroClickHandler);
+  }
+  
+  heroSection._heroClickHandler = (event) => {
+    if (event.target.closest('button, a, .hero-dots')) return;
+    if (pool[current]) {
+      openProductModal(pool[current]);
+    }
+  };
+  
+  heroSection.addEventListener('click', heroSection._heroClickHandler);
 
   if (heroCarouselTimer) clearInterval(heroCarouselTimer);
   heroCarouselTimer = setInterval(() => goTo(current + 1), 2700);
