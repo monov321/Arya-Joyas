@@ -19,14 +19,24 @@ function $(selector) {
 
 function setText(selector, value) {
   const element = $(selector);
-  if (element && value) element.textContent = value;
+  if (element) {
+    if (value !== undefined && value !== null && value !== '') {
+      element.textContent = value;
+    } else {
+      element.textContent = '';
+    }
+  }
 }
 
 function whatsappLink(settings, productName = '') {
-  const number = (settings.whatsappNumber || '').replace(/\D/g, '') || '56979254260';
+  const number = (settings && settings.whatsappNumber) 
+    ? settings.whatsappNumber.replace(/\D/g, '') 
+    : '56979254260';
+    
   const text = productName
     ? `Hola Arya, quiero consultar por ${productName}.`
     : 'Hola Arya, quiero consultar por sus joyas.';
+    
   return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
 }
 
@@ -50,23 +60,24 @@ function stockLine(product) {
 
 function applySettings(settings) {
   state.settings = settings || {};
-  setText('#topBar', settings.topBarText);
-  setText('#heroSubtitle', settings.heroSubtitle);
-  setText('#heroTitle', settings.heroTitle);
-  setText('#heroText', settings.heroText);
-  setText('#aboutTitle', settings.aboutTitle);
-  setText('#aboutText', settings.aboutText);
-  setText('#ctaTitle', settings.ctaTitle);
-  setText('#ctaText', settings.ctaText);
-  setText('#footerEmail', settings.email);
+  
+  if (state.settings.topBarText) setText('#topBar', state.settings.topBarText);
+  if (state.settings.heroSubtitle) setText('#heroSubtitle', state.settings.heroSubtitle);
+  if (state.settings.heroTitle) setText('#heroTitle', state.settings.heroTitle);
+  if (state.settings.heroText) setText('#heroText', state.settings.heroText);
+  if (state.settings.aboutTitle) setText('#aboutTitle', state.settings.aboutTitle);
+  if (state.settings.aboutText) setText('#aboutText', state.settings.aboutText);
+  if (state.settings.ctaTitle) setText('#ctaTitle', state.settings.ctaTitle);
+  if (state.settings.ctaText) setText('#ctaText', state.settings.ctaText);
+  if (state.settings.email) setText('#footerEmail', state.settings.email);
 
   const whatsappHero = $('#whatsappHero');
   const whatsappCta = $('#whatsappCta');
-  if (whatsappHero) whatsappHero.href = whatsappLink(settings);
-  if (whatsappCta) whatsappCta.href = whatsappLink(settings);
+  if (whatsappHero) whatsappHero.href = whatsappLink(state.settings);
+  if (whatsappCta) whatsappCta.href = whatsappLink(state.settings);
 
   const instagram = $('#instagramLink');
-  if (instagram && settings.instagramUrl) instagram.href = settings.instagramUrl;
+  if (instagram && state.settings.instagramUrl) instagram.href = state.settings.instagramUrl;
 }
 
 function productMatchesFilter(product) {
@@ -83,6 +94,8 @@ function setPaymentMessage(text, ok = true) {
 
 function trapFocus(modal) {
   const focusable = modal.querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), [tabindex]:not([tabindex="-1"])');
+  if (!focusable.length) return;
+  
   const first = focusable[0];
   const last = focusable[focusable.length - 1];
 
@@ -161,6 +174,8 @@ function closeProductModal() {
 }
 
 function redirectToWebpay({ url, token }) {
+  if (!url || !token) return;
+  
   const form = document.createElement('form');
   form.method = 'POST';
   form.action = url;
@@ -226,7 +241,7 @@ function createProductNode(product) {
   };
 
   card.classList.toggle('is-sold-out', isOut);
-  node.querySelector('.badge-category').textContent = product.featured ? 'Destacado' : product.category || 'Arya';
+  node.querySelector('.badge-category').textContent = product.featured ? 'Destacado' : (product.category || 'Arya');
 
   const badgeStock = node.querySelector('.badge-stock');
   badgeStock.textContent = stock.label;
@@ -240,8 +255,11 @@ function createProductNode(product) {
   node.querySelector('.stock-label').textContent = stockLine(product);
 
   const compare = node.querySelector('.compare-price');
-  if (product.compareAtPrice) compare.textContent = money.format(product.compareAtPrice);
-  else compare.remove();
+  if (product.compareAtPrice) {
+    compare.textContent = money.format(product.compareAtPrice);
+  } else {
+    compare.remove();
+  }
 
   const detailButton = node.querySelector('.product-detail-btn');
   detailButton.addEventListener('click', () => openProductModal(product));
@@ -316,30 +334,42 @@ function setupCarouselControls() {
   });
 }
 
-// ── Hero Carousel ──────────────────────────────────────────────────────────────
 let heroCarouselTimer = null;
 
 function buildHeroCarousel(products) {
   const slidesEl = document.getElementById('heroSlides');
-  const dotsEl   = document.getElementById('heroDots');
+  const dotsEl = document.getElementById('heroDots');
   if (!slidesEl || !dotsEl) return;
 
-  // Usa los primeros 8 productos que tengan imagen
   const pool = products.filter(p => p.imageUrl).slice(0, 8);
-  if (!pool.length) return; // sin imágenes, el fondo queda oscuro (color del hero-banner)
+  if (!pool.length) return; 
 
   slidesEl.innerHTML = '';
-  dotsEl.innerHTML   = '';
+  dotsEl.innerHTML = '';
 
   pool.forEach((product, i) => {
-    // slide
     const slide = document.createElement('div');
     slide.className = 'hero-slide' + (i === 0 ? ' is-active' : '');
     slide.style.backgroundImage = `url('${product.imageUrl}')`;
-    slide.setAttribute('aria-label', product.name);
+    
+    slide.style.cursor = 'pointer';
+    slide.setAttribute('role', 'button');
+    slide.setAttribute('aria-label', `Ver información de ${product.name}`);
+    slide.tabIndex = 0;
+
+    slide.addEventListener('click', () => {
+      openProductModal(product);
+    });
+
+    slide.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        openProductModal(product);
+      }
+    });
+
     slidesEl.appendChild(slide);
 
-    // dot
     const dot = document.createElement('span');
     dot.className = 'hero-dot' + (i === 0 ? ' is-active' : '');
     dotsEl.appendChild(dot);
@@ -347,9 +377,10 @@ function buildHeroCarousel(products) {
 
   let current = 0;
   const slides = slidesEl.querySelectorAll('.hero-slide');
-  const dots   = dotsEl.querySelectorAll('.hero-dot');
+  const dots = dotsEl.querySelectorAll('.hero-dot');
 
   function goTo(index) {
+    if (slides.length === 0) return;
     slides[current].classList.remove('is-active');
     dots[current].classList.remove('is-active');
     current = (index + slides.length) % slides.length;
@@ -357,20 +388,17 @@ function buildHeroCarousel(products) {
     dots[current].classList.add('is-active');
   }
 
-  // Permite navegar haciendo clic en los dots
   dots.forEach((dot, i) => {
     dot.addEventListener('click', () => {
-      clearInterval(heroCarouselTimer);
+      if (heroCarouselTimer) clearInterval(heroCarouselTimer);
       goTo(i);
       heroCarouselTimer = setInterval(() => goTo(current + 1), 2700);
     });
   });
 
-  // Limpia timer previo si se recarga
   if (heroCarouselTimer) clearInterval(heroCarouselTimer);
   heroCarouselTimer = setInterval(() => goTo(current + 1), 2700);
 }
-// ──────────────────────────────────────────────────────────────────────────────
 
 async function loadSettings() {
   const response = await fetch('/api/settings');
@@ -384,7 +412,7 @@ async function loadProducts() {
   if (!response.ok) throw new Error('No se pudieron cargar los productos.');
   const json = await response.json();
   state.products = json.data || [];
-  buildHeroCarousel(state.products); // ← carrusel hero con fotos reales
+  buildHeroCarousel(state.products);
   renderCarousel();
   renderProducts();
 }
@@ -421,9 +449,11 @@ function setupSmoothScroll() {
     element.addEventListener('click', function(e) {
       e.preventDefault();
       const targetId = this.getAttribute('href') || this.getAttribute('data-scroll');
-      const targetElement = document.querySelector(targetId);
-      if (targetElement) {
-        targetElement.scrollIntoView({ behavior: 'smooth' });
+      if (targetId) {
+        const targetElement = document.querySelector(targetId);
+        if (targetElement) {
+          targetElement.scrollIntoView({ behavior: 'smooth' });
+        }
       }
     });
   });
@@ -443,7 +473,7 @@ async function init() {
     }
     const track = $('#carouselTrack');
     if (track) {
-      track.innerHTML = '<div class="loading-card">Error de conexión.</div>';
+      track.innerHTML = '<div class="loading-card">Error de conexión con la base de datos.</div>';
     }
   }
 }
