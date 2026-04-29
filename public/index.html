@@ -26,8 +26,9 @@
     </header>
 
     <main>
-      <section class="hero-banner">
-        <img class="hero-bg" src="https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=1200&q=80" alt="Joyas destacadas Arya" />
+      <!-- ── Hero con carrusel de productos ── -->
+      <section class="hero-banner" id="heroCarousel" aria-label="Carrusel de productos">
+        <div class="hero-slides" id="heroSlides"></div>
         <div class="hero-overlay"></div>
         <div class="hero-content reveal">
           <p class="eyebrow" id="heroSubtitle">LA DIFERENCIA ESTÁ EN</p>
@@ -37,6 +38,7 @@
             <a class="btn btn-secondary-light" id="whatsappHero" href="https://wa.me/56979254260?text=Hola%2C%20me%20interesa%20comprar%20joyas" target="_blank" rel="noopener">Comprar por WhatsApp</a>
           </div>
         </div>
+        <div class="hero-dots" id="heroDots" aria-hidden="true"></div>
       </section>
 
       <section class="service-strip section-wrap">
