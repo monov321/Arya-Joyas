@@ -143,6 +143,21 @@
         </div>
       </article>
     </template>
+    
+    <section class="collection-modal" id="collectionModal" aria-hidden="true" role="dialog" aria-modal="true">
+      <div class="collection-modal-backdrop" id="closeCollectionBackdrop"></div>
+      <div class="collection-modal-panel">
+        <button class="modal-close" type="button" id="closeCollectionBtn">×</button>
+        <div class="collection-modal-header">
+          <h2>Colección Completa</h2>
+          <p>Explora todas nuestras joyas delicadas y luminosas</p>
+        </div>
+        <div class="collection-modal-grid" id="collectionModalGrid">
+          <div class="loading-card">Cargando la colección completa...</div>
+        </div>
+      </div>
+    </section>
+
     <section class="product-modal" id="productModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modalProductName">
       <div class="product-modal-backdrop" data-close-modal></div>
       <div class="product-modal-panel" role="document">
