@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="es">
-<head>
+  <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Arya Joyas y Accesorios: catálogo de joyas delicadas, femeninas y luminosas." />
@@ -10,167 +10,182 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/styles.css" />
-</head>
-<body>
+  </head>
+  <body>
     <div class="topbar" id="topBar">Despachos a todo Chile · Joyas delicadas con atención personalizada</div>
-
     <header class="site-header" aria-label="Cabecera principal">
-        <a href="/" class="brand" aria-label="Arya Joyas inicio">
-            <img src="/assets/logo.png" alt="Logo Arya Joyas y Accesorios" />
-        </a>
-        <nav class="main-nav" aria-label="Navegación principal">
-            <a href="#carrusel-productos">Novedades</a>
-            <a href="#coleccion" id="nav-coleccion">Colección</a>
-            <a href="#contacto">Contacto</a>
-        </nav>
+      <a href="/" class="brand" aria-label="Arya Joyas inicio">
+        <img src="/assets/logo.png" alt="Logo Arya Joyas y Accesorios" />
+      </a>
+      <nav class="main-nav" aria-label="Navegación principal">
+        <a href="#carrusel-productos">Novedades</a>
+        <a href="#coleccion" id="nav-coleccion">Colección</a>
+        <a href="#contacto">Contacto</a>
+      </nav>
     </header>
-
     <main>
-        <section class="hero-banner" id="heroCarousel" aria-label="Carrusel de productos">
-            <div class="hero-slides" id="heroSlides"></div>
-            <div class="hero-overlay"></div>
-            <div class="hero-content reveal">
-                <p class="eyebrow" id="heroSubtitle"></p>
-                <h1 id="heroTitle" class="hero-cursive"></h1>
-                <div class="hero-actions">
-                    <button class="btn btn-primary" type="button" data-scroll="#carrusel-productos">Ver Novedades</button>
-                    <a class="btn btn-secondary-light" id="whatsappHero" href="https://wa.me/56979254260?text=Hola%2C%20me%20interesa%20comprar%20joyas" target="_blank" rel="noopener">Comprar por WhatsApp</a>
-                </div>
-            </div>
-            <div class="hero-dots" id="heroDots" aria-hidden="true"></div>
-        </section>
-
-        <section class="service-strip section-wrap">
-            <article class="service-card reveal">
-                <p class="eyebrow">01</p>
-                <h3>Selección delicada</h3>
-                <p>Una estética más limpia y elegante para que el producto tenga protagonismo.</p>
-            </article>
-            <article class="service-card reveal delay-1">
-                <p class="eyebrow">02</p>
-                <h3>Compra simple</h3>
-                <p>Haz clic en una joya para ver información, stock disponible y medios de compra.</p>
-            </article>
-            <article class="service-card reveal delay-2">
-                <p class="eyebrow">03</p>
-                <h3>Atención cercana</h3>
-                <p>Complementa la venta online con contacto directo por WhatsApp e Instagram.</p>
-            </article>
-        </section>
-
-        <section id="carrusel-productos" class="carousel-section section-wrap">
-            <div class="section-heading reveal">
-                <div>
-                    <p class="eyebrow">Descubre</p>
-                    <h2>Todos nuestros productos</h2>
-                </div>
-            </div>
-            <div class="carousel-wrapper reveal delay-1">
-                <button class="carousel-btn prev-btn" aria-label="Anterior">&#8249;</button>
-                <div class="carousel-track" id="carouselTrack" aria-live="polite">
-                    <div class="loading-card">Cargando productos...</div>
-                </div>
-                <button class="carousel-btn next-btn" aria-label="Siguiente">&#8250;</button>
-            </div>
-        </section>
-
-        <section id="coleccion" class="collection section-wrap">
-            <div class="section-heading reveal">
-                <div>
-                    <p class="eyebrow">Colección Arya</p>
-                    <h2>Explora por categoría</h2>
-                </div>
-                <p class="section-text">
-                    Al hacer clic en una joya se abre su ficha completa con información, stock y precio.
-                </p>
-            </div>
-
-            <div class="filter-row reveal delay-1" id="filterRow" aria-label="Filtros de productos">
-                <button class="chip is-active" data-filter="all">Todo</button>
-                <button class="chip" data-filter="Aros">Aros</button>
-                <button class="chip" data-filter="Collares">Collares</button>
-                <button class="chip" data-filter="Pulseras">Pulseras</button>
-                <button class="chip" data-filter="Anillos">Anillos</button>
-                <button class="chip" data-filter="Sets">Sets</button>
-            </div>
-
-            <div id="productsGrid" class="products-grid" aria-live="polite">
-                <div class="loading-card">Cargando productos...</div>
-            </div>
-        </section>
-
-        <section id="contacto" class="cta section-wrap">
-            <div>
-                <p class="eyebrow">Contacto</p>
-                <h2 id="ctaTitle">Compra simple, atención cercana</h2>
-                <p id="ctaText">
-                    El catálogo funciona como vitrina. El botón de cada producto abre WhatsApp con el nombre de la pieza.
-                </p>
-            </div>
-            <div class="cta-actions">
-                <a class="btn btn-primary" id="whatsappCta" href="https://wa.me/56979254260?text=Hola%20Arya%2C%20quiero%20consultar%20por%20sus%20joyas." target="_blank" rel="noopener">Escribir por WhatsApp</a>
-                <button class="btn btn-secondary" type="button" data-scroll="#coleccion">Ver catálogo</button>
-            </div>
-        </section>
-    </main>
-
-    <footer class="footer">
-        <div class="footer-brand">
-            <img src="/assets/logo.png" alt="Arya Joyas" />
-            <div>
-                <strong>Arya Joyas y Accesorios</strong>
-                <span id="footerEmail">contacto@aryajoyas.cl</span>
-            </div>
+      <section class="hero-banner" id="heroCarousel" aria-label="Carrusel de productos">
+        <div class="hero-slides" id="heroSlides"></div>
+        <div class="hero-overlay"></div>
+        <div class="hero-content reveal">
+          <p class="eyebrow" id="heroSubtitle"></p>
+          <h1 id="heroTitle" class="hero-cursive"></h1>
+          <div class="hero-actions">
+            <button class="btn btn-primary" type="button" data-scroll="#carrusel-productos">Ver Novedades</button>
+            <a class="btn btn-secondary-light" id="whatsappHero" href="https://wa.me/56979254260?text=Hola%2C%20me%20interesa%20comprar%20joyas" target="_blank" rel="noopener">Comprar por WhatsApp</a>
+          </div>
         </div>
-        <a id="instagramLink" href="https://www.instagram.com/" target="_blank" rel="noopener">Instagram</a>
-    </footer>
-
-    <template id="productCardTemplate">
-        <article class="product-card">
-            <div class="product-image-wrap">
-                <img class="product-image" alt="" loading="lazy" />
-                <span class="badge badge-category"></span>
-                <span class="badge-stock"></span>
-            </div>
-            <div class="product-content">
-                <h3 class="product-name"></h3>
-                <div class="product-bottom">
-                    <div class="price-block">
-                        <span class="price"></span>
-                    </div>
-                </div>
-                <div class="product-actions">
-                    <button class="btn btn-small product-detail-btn" type="button">Ver información</button>
-                    <a class="btn btn-small btn-outline whatsapp-product" href="" target="_blank" rel="noopener">WhatsApp</a>
-                </div>
-            </div>
+        <div class="hero-dots" id="heroDots" aria-hidden="true"></div>
+      </section>
+      <section class="service-strip section-wrap">
+        <article class="service-card reveal">
+          <p class="eyebrow">01</p>
+          <h3>Selección delicada</h3>
+          <p>Una estética más limpia y elegante para que el producto tenga protagonismo.</p>
         </article>
-    </template>
-
-    <section class="product-modal" id="productModal" aria-hidden="true" role="dialog" aria-modal="true">
-        <div class="product-modal-backdrop" data-close-modal></div>
-        <div class="product-modal-panel">
-            <button class="modal-close" type="button" data-close-modal>×</button>
-            <div class="modal-product-grid">
-                <div class="modal-image-shell">
-                    <img id="modalProductImage" src="" alt="" />
-                </div>
-                <div class="modal-product-copy">
-                    <h2 id="modalProductName"></h2>
-                    <p id="modalProductDescription"></p>
-                    <dl class="product-info-list">
-                        <div><dt>Material</dt><dd id="modalProductMaterial"></dd></div>
-                        <div><dt>Precio</dt><dd id="modalProductPrice"></dd></div>
-                        <div><dt>Stock</dt><dd id="modalProductStock"></dd></div>
-                    </dl>
-                    <div class="modal-actions">
-                        <a class="btn btn-primary" id="modalWhatsapp" href="" target="_blank">Consultar por WhatsApp</a>
-                    </div>
-                </div>
-            </div>
+        <article class="service-card reveal delay-1">
+          <p class="eyebrow">02</p>
+          <h3>Compra simple</h3>
+          <p>Haz clic en una joya para ver información, stock disponible y medios de compra.</p>
+        </article>
+        <article class="service-card reveal delay-2">
+          <p class="eyebrow">03</p>
+          <h3>Atención cercana</h3>
+          <p>Complementa la venta online con contacto directo por WhatsApp e Instagram.</p>
+        </article>
+      </section>
+      <section id="carrusel-productos" class="carousel-section section-wrap">
+        <div class="section-heading reveal">
+          <div>
+            <p class="eyebrow">Descubre</p>
+            <h2>Todos nuestros productos</h2>
+          </div>
         </div>
+        <div class="carousel-wrapper reveal delay-1">
+          <button class="carousel-btn prev-btn" aria-label="Anterior">&#8249;</button>
+          <div class="carousel-track" id="carouselTrack" aria-live="polite">
+            <div class="loading-card">Cargando productos...</div>
+          </div>
+          <button class="carousel-btn next-btn" aria-label="Siguiente">&#8250;</button>
+        </div>
+      </section>
+      <section id="coleccion" class="collection section-wrap">
+        <div class="section-heading reveal">
+          <div>
+            <p class="eyebrow">Colección Arya</p>
+            <h2>Explora por categoría</h2>
+          </div>
+          <p class="section-text">
+            Al hacer clic en una joya se abre su ficha completa con información, stock, precio y pago con Webpay test.
+          </p>
+        </div>
+        <div class="filter-row reveal delay-1" aria-label="Filtros de productos">
+          <button class="chip is-active" data-filter="all">Todo</button>
+          <button class="chip" data-filter="Aros">Aros</button>
+          <button class="chip" data-filter="Collares">Collares</button>
+          <button class="chip" data-filter="Pulseras">Pulseras</button>
+          <button class="chip" data-filter="Anillos">Anillos</button>
+          <button class="chip" data-filter="Sets">Sets</button>
+        </div>
+        <div id="productsGrid" class="products-grid" aria-live="polite">
+          <div class="loading-card">Cargando productos...</div>
+        </div>
+      </section>
+      <section id="contacto" class="cta section-wrap">
+        <div>
+          <p class="eyebrow">Contacto</p>
+          <h2 id="ctaTitle">Compra simple, atención cercana</h2>
+          <p id="ctaText">
+            El catálogo funciona como vitrina. El botón de cada producto abre WhatsApp con el nombre de la pieza para coordinar compra.
+          </p>
+        </div>
+        <div class="cta-actions">
+          <a class="btn btn-primary" id="whatsappCta" href="https://wa.me/56979254260?text=Hola%20Arya%2C%20quiero%20consultar%20por%20sus%20joyas." target="_blank" rel="noopener">Escribir por WhatsApp</a>
+          <button class="btn btn-secondary" type="button" data-scroll="#coleccion">Ver catálogo</button>
+        </div>
+      </section>
+    </main>
+    <footer class="footer">
+      <div class="footer-brand">
+        <img src="/assets/logo.png" alt="Arya Joyas" />
+        <div>
+          <strong>Arya Joyas y Accesorios</strong>
+          <span id="footerEmail">contacto@aryajoyas.cl</span>
+        </div>
+      </div>
+      <a id="instagramLink" href="https://www.instagram.com/" target="_blank" rel="noopener">Instagram</a>
+    </footer>
+    <template id="productCardTemplate">
+      <article class="product-card reveal">
+        <div class="product-image-wrap">
+          <img class="product-image" alt="" loading="lazy" />
+          <span class="badge badge-category"></span>
+          <span class="badge-stock"></span>
+        </div>
+        <div class="product-content">
+          <div class="product-meta">
+            <span class="product-category"></span>
+            <span class="product-material"></span>
+          </div>
+          <h3 class="product-name"></h3>
+          <p class="product-description"></p>
+          <div class="product-bottom">
+            <div class="price-block">
+              <span class="price"></span>
+              <span class="compare-price"></span>
+            </div>
+            <span class="stock-label"></span>
+          </div>
+          <div class="product-actions">
+            <button class="btn btn-small product-detail-btn" type="button">Ver información</button>
+            <a class="btn btn-small btn-outline whatsapp-product" href="https://wa.me/56979254260?text=Hola%2C%20quiero%20consultar%20por%20este%20producto" target="_blank" rel="noopener">WhatsApp</a>
+          </div>
+        </div>
+      </article>
+    </template>
+    <section class="product-modal" id="productModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modalProductName">
+      <div class="product-modal-backdrop" data-close-modal></div>
+      <div class="product-modal-panel" role="document">
+        <button class="modal-close" type="button" data-close-modal aria-label="Cerrar información del producto">×</button>
+        <div class="modal-product-grid">
+          <div class="modal-image-shell">
+            <img id="modalProductImage" src="/assets/logo.png" alt="" />
+          </div>
+          <div class="modal-product-copy">
+            <div class="modal-heading-row">
+              <p class="eyebrow" id="modalProductCategory">Arya Joyas</p>
+              <span id="modalStockBadge" class="badge-stock"></span>
+            </div>
+            <h2 id="modalProductName">Producto</h2>
+            <p id="modalProductDescription">Información del producto.</p>
+            <dl class="product-info-list">
+              <div>
+                <dt>Material</dt>
+                <dd id="modalProductMaterial">Consultar</dd>
+              </div>
+              <div>
+                <dt>Precio</dt>
+                <dd id="modalProductPrice">$0</dd>
+              </div>
+              <div>
+                <dt>Stock</dt>
+                <dd id="modalProductStock">0 unidades</dd>
+              </div>
+            </dl>
+            <label class="quantity-field">
+              Cantidad
+              <input id="modalProductQuantity" type="number" min="1" max="10" value="1" />
+            </label>
+            <div class="modal-actions">
+              <button class="btn btn-primary" id="webpayButton" type="button">Pagar con Webpay test</button>
+              <a class="btn btn-secondary" id="modalWhatsapp" href="https://wa.me/56979254260?text=Hola%2C%20tengo%20una%20duda%20con%20este%20producto" target="_blank" rel="noopener">Consultar por WhatsApp</a>
+            </div>
+            <p class="payment-message" id="paymentMessage" aria-live="polite"></p>
+            <p class="muted small-note">Pago en ambiente de prueba. Para producción hay que configurar las credenciales reales de Transbank.</p>
+          </div>
+        </div>
+      </div>
     </section>
-
     <script src="/js/main.js" defer></script>
-</body>
+  </body>
 </html>
