@@ -287,6 +287,7 @@ function createProductNode(product) {
 
 function renderProducts() {
   const grid = $('#productsGrid');
+  if (!grid) return;
   grid.innerHTML = '';
 
   const products = state.products.filter(productMatchesFilter);
@@ -296,9 +297,11 @@ function renderProducts() {
     return;
   }
 
+  const fragment = document.createDocumentFragment();
   products.forEach((product) => {
-    grid.appendChild(createProductNode(product));
+    fragment.appendChild(createProductNode(product));
   });
+  grid.appendChild(fragment);
 }
 
 function renderCarousel() {
@@ -443,15 +446,48 @@ function setupProductModal() {
   });
 }
 
+function setupColeccionLink() {
+  const coleccionLink = document.querySelector('a[href="#coleccion"]');
+  if (coleccionLink) {
+    coleccionLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      state.activeFilter = 'all';
+      document.querySelectorAll('[data-filter]').forEach((btn) => {
+        btn.classList.remove('is-active');
+        if (btn.dataset.filter === 'all') {
+          btn.classList.add('is-active');
+        }
+      });
+      renderProducts();
+      const target = document.querySelector('#coleccion');
+      if (target) {
+        const headerOffset = 100;
+        const elementPosition = target.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
+      }
+    });
+  }
+}
+
 function setupSmoothScroll() {
-  document.querySelectorAll('a[href^="#"], button[data-scroll]').forEach(element => {
+  document.querySelectorAll('a[href^="#"]:not([href="#coleccion"]), button[data-scroll]').forEach(element => {
     element.addEventListener('click', function(e) {
       e.preventDefault();
       const targetId = this.getAttribute('href') || this.getAttribute('data-scroll');
-      if (targetId) {
+      if (targetId && targetId.startsWith('#')) {
         const targetElement = document.querySelector(targetId);
         if (targetElement) {
-          targetElement.scrollIntoView({ behavior: 'smooth' });
+          const headerOffset = 100;
+          const elementPosition = targetElement.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+          });
         }
       }
     });
@@ -463,6 +499,7 @@ async function init() {
   setupProductModal();
   setupSmoothScroll();
   setupCarouselControls();
+  setupColeccionLink();
   try {
     await Promise.all([loadSettings(), loadProducts()]);
   } catch (error) {
