@@ -168,7 +168,10 @@ function closeProductModal() {
   if (!modal) return;
   modal.classList.remove('is-open');
   modal.setAttribute('aria-hidden', 'true');
-  document.body.classList.remove('modal-open');
+  const collectionModal = $('#collectionModal');
+  if (!collectionModal || !collectionModal.classList.contains('is-open')) {
+    document.body.classList.remove('modal-open');
+  }
   state.selectedProduct = null;
   setPaymentMessage('');
 }
@@ -446,31 +449,53 @@ function setupProductModal() {
   });
 }
 
+function openCollectionModal() {
+  const modal = $('#collectionModal');
+  const grid = $('#collectionModalGrid');
+  if (!modal || !grid) return;
+  
+  grid.innerHTML = '';
+  
+  if (!state.products.length) {
+    grid.innerHTML = '<div class="loading-card">No hay productos disponibles actualmente.</div>';
+  } else {
+    const fragment = document.createDocumentFragment();
+    state.products.forEach(product => {
+      fragment.appendChild(createProductNode(product));
+    });
+    grid.appendChild(fragment);
+  }
+
+  modal.classList.add('is-open');
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('modal-open');
+  trapFocus(modal);
+}
+
+function closeCollectionModal() {
+  const modal = $('#collectionModal');
+  if (!modal) return;
+  modal.classList.remove('is-open');
+  modal.setAttribute('aria-hidden', 'true');
+  const productModal = $('#productModal');
+  if (!productModal || !productModal.classList.contains('is-open')) {
+    document.body.classList.remove('modal-open');
+  }
+}
+
 function setupColeccionLink() {
   const coleccionLink = document.querySelector('a[href="#coleccion"]');
   if (coleccionLink) {
     coleccionLink.addEventListener('click', (e) => {
       e.preventDefault();
-      state.activeFilter = 'all';
-      document.querySelectorAll('[data-filter]').forEach((btn) => {
-        btn.classList.remove('is-active');
-        if (btn.dataset.filter === 'all') {
-          btn.classList.add('is-active');
-        }
-      });
-      renderProducts();
-      const target = document.querySelector('#coleccion');
-      if (target) {
-        const headerOffset = 100;
-        const elementPosition = target.getBoundingClientRect().top;
-        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-        window.scrollTo({
-          top: offsetPosition,
-          behavior: 'smooth'
-        });
-      }
+      openCollectionModal();
     });
   }
+
+  const closeBtn = $('#closeCollectionBtn');
+  const closeBackdrop = $('#closeCollectionBackdrop');
+  if (closeBtn) closeBtn.addEventListener('click', closeCollectionModal);
+  if (closeBackdrop) closeBackdrop.addEventListener('click', closeCollectionModal);
 }
 
 function setupSmoothScroll() {
