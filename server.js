@@ -364,6 +364,70 @@ app.delete('/api/products/:id', requireAdmin, async (req, res, next) => {
 
 app.post('/api/webpay/create', async (req, res, next) => {
   try {
+    const { cart } = req.body || {};
+    
+    if (cart && Array.isArray(cart) && cart.length > 0) {
+      let amount = 0;
+      let totalQuantity = 0;
+      const productSnapshots = [];
+      let firstProductId = null;
+
+      for (const item of cart) {
+        if (!mongoose.Types.ObjectId.isValid(item.id)) {
+          return res.status(400).json({ message: 'Producto inválido en el carrito.', success: false });
+        }
+        const product = await Product.findOne({ _id: item.id, active: true });
+        if (!product) return res.status(404).json({ message: 'Producto no encontrado.', success: false });
+        if (!product.price || product.price < 1) return res.status(400).json({ message: 'Precio inválido.', success: false });
+        
+        const requestedQuantity = Math.max(1, Math.min(10, normalizeNumber(item.quantity, 1)));
+        if (product.stock <= 0) return res.status(400).json({ message: 'Producto agotado.', success: false });
+        if (requestedQuantity > product.stock) return res.status(400).json({ message: `Stock insuficiente para ${product.name}.`, success: false });
+
+        amount += Math.round(product.price * requestedQuantity);
+        totalQuantity += requestedQuantity;
+        productSnapshots.push({
+          productId: product._id,
+          name: product.name,
+          description: product.description,
+          price: product.price,
+          category: product.category,
+          material: product.material,
+          imageUrl: product.imageUrl,
+          quantity: requestedQuantity
+        });
+        
+        if (!firstProductId) firstProductId = product._id;
+      }
+
+      const buyOrder = makeBuyOrder();
+      const sessionId = makeSessionId();
+      const returnUrl = `${getBaseUrl(req)}/webpay/return`;
+
+      const order = await Order.create({
+        buyOrder,
+        sessionId,
+        product: firstProductId,
+        productSnapshot: productSnapshots,
+        quantity: totalQuantity,
+        amount,
+        status: 'created'
+      });
+
+      const tx = getWebpayTransaction();
+      const createResponse = await tx.create(buyOrder, sessionId, amount, returnUrl);
+      order.token = createResponse.token;
+      await order.save();
+
+      return res.json({
+        buyOrder,
+        amount,
+        token: createResponse.token,
+        url: createResponse.url,
+        success: true
+      });
+    }
+
     const { productId } = req.body || {};
     if (!mongoose.Types.ObjectId.isValid(productId)) {
       return res.status(400).json({ message: 'Producto inválido.', success: false });
@@ -398,7 +462,8 @@ app.post('/api/webpay/create', async (req, res, next) => {
         price: product.price,
         category: product.category,
         material: product.material,
-        imageUrl: product.imageUrl
+        imageUrl: product.imageUrl,
+        quantity: requestedQuantity
       },
       quantity: requestedQuantity,
       amount,
@@ -450,18 +515,36 @@ app.all('/webpay/return', async (req, res) => {
     let extraResponse = commitResponse;
 
     if (authorized && existingOrder.status !== 'authorized') {
-      const product = await Product.findOneAndUpdate(
-        { _id: existingOrder.product, stock: { $gte: existingOrder.quantity } },
-        { $inc: { stock: -existingOrder.quantity } },
-        { new: true }
-      );
+      if (Array.isArray(existingOrder.productSnapshot)) {
+        let stockErrorMsg = '';
+        for (const item of existingOrder.productSnapshot) {
+          const product = await Product.findOneAndUpdate(
+            { _id: item.productId || existingOrder.product, stock: { $gte: item.quantity } },
+            { $inc: { stock: -item.quantity } },
+            { new: true }
+          );
+          if (!product) {
+            finalStatus = 'failed';
+            stockErrorMsg = 'No había stock suficiente al confirmar el pago en algunos productos.';
+          }
+        }
+        if (stockErrorMsg) {
+          extraResponse = { ...commitResponse, stockError: stockErrorMsg };
+        }
+      } else {
+        const product = await Product.findOneAndUpdate(
+          { _id: existingOrder.product, stock: { $gte: existingOrder.quantity } },
+          { $inc: { stock: -existingOrder.quantity } },
+          { new: true }
+        );
 
-      if (!product) {
-        finalStatus = 'failed';
-        extraResponse = {
-          ...commitResponse,
-          stockError: 'No había stock suficiente al confirmar el pago.'
-        };
+        if (!product) {
+          finalStatus = 'failed';
+          extraResponse = {
+            ...commitResponse,
+            stockError: 'No había stock suficiente al confirmar el pago.'
+          };
+        }
       }
     }
 
