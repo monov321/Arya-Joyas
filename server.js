@@ -369,8 +369,9 @@ app.post('/api/webpay/create', async (req, res, next) => {
     if (cart && Array.isArray(cart) && cart.length > 0) {
       let amount = 0;
       let totalQuantity = 0;
-      const productSnapshots = [];
       let firstProductId = null;
+      let firstImage = null;
+      const cartData = [];
 
       for (const item of cart) {
         if (!mongoose.Types.ObjectId.isValid(item.id)) {
@@ -386,18 +387,13 @@ app.post('/api/webpay/create', async (req, res, next) => {
 
         amount += Math.round(product.price * requestedQuantity);
         totalQuantity += requestedQuantity;
-        productSnapshots.push({
-          productId: product._id,
-          name: product.name,
-          description: product.description,
-          price: product.price,
-          category: product.category,
-          material: product.material,
-          imageUrl: product.imageUrl,
-          quantity: requestedQuantity
-        });
         
-        if (!firstProductId) firstProductId = product._id;
+        cartData.push({ id: product._id.toString(), qty: requestedQuantity });
+        
+        if (!firstProductId) {
+            firstProductId = product._id;
+            firstImage = product.imageUrl;
+        }
       }
 
       const buyOrder = makeBuyOrder();
@@ -408,7 +404,14 @@ app.post('/api/webpay/create', async (req, res, next) => {
         buyOrder,
         sessionId,
         product: firstProductId,
-        productSnapshot: productSnapshots,
+        productSnapshot: {
+          name: totalQuantity > 1 ? `Carrito (${totalQuantity} productos)` : cart[0].name,
+          description: JSON.stringify(cartData),
+          price: amount,
+          category: 'Carrito de Compras',
+          material: 'Varios',
+          imageUrl: firstImage
+        },
         quantity: totalQuantity,
         amount,
         status: 'created'
@@ -458,12 +461,11 @@ app.post('/api/webpay/create', async (req, res, next) => {
       product: product._id,
       productSnapshot: {
         name: product.name,
-        description: product.description,
+        description: product.description || 'Producto',
         price: product.price,
-        category: product.category,
-        material: product.material,
-        imageUrl: product.imageUrl,
-        quantity: requestedQuantity
+        category: product.category || 'Categoría',
+        material: product.material || 'Material',
+        imageUrl: product.imageUrl || '/assets/logo.png'
       },
       quantity: requestedQuantity,
       amount,
@@ -515,12 +517,26 @@ app.all('/webpay/return', async (req, res) => {
     let extraResponse = commitResponse;
 
     if (authorized && existingOrder.status !== 'authorized') {
-      if (Array.isArray(existingOrder.productSnapshot)) {
+      let isCart = false;
+      let cartItems = [];
+      
+      try {
+        if (existingOrder.productSnapshot && existingOrder.productSnapshot.description) {
+          cartItems = JSON.parse(existingOrder.productSnapshot.description);
+          if (Array.isArray(cartItems) && cartItems[0] && cartItems[0].id) {
+            isCart = true;
+          }
+        }
+      } catch (e) {
+        isCart = false;
+      }
+
+      if (isCart) {
         let stockErrorMsg = '';
-        for (const item of existingOrder.productSnapshot) {
+        for (const item of cartItems) {
           const product = await Product.findOneAndUpdate(
-            { _id: item.productId || existingOrder.product, stock: { $gte: item.quantity } },
-            { $inc: { stock: -item.quantity } },
+            { _id: item.id, stock: { $gte: item.qty } },
+            { $inc: { stock: -item.qty } },
             { new: true }
           );
           if (!product) {
@@ -557,7 +573,7 @@ app.all('/webpay/return', async (req, res) => {
     const orderQuery = order?.buyOrder ? `&order=${encodeURIComponent(order.buyOrder)}` : '';
     return res.redirect(`/pago.html?status=${finalStatus === 'authorized' ? 'success' : 'failed'}${orderQuery}`);
   } catch (error) {
-    console.error('Error confirmando Webpay:', error);
+    console.error(error);
     if (token) {
       await Order.findOneAndUpdate(
         { token },
@@ -594,7 +610,7 @@ async function start() {
     await connectToDatabase();
     app.listen(PORT, () => console.log(`Arya Joyas listo en http://localhost:${PORT}`));
   } catch (error) {
-    console.error('No se pudo iniciar la app:', error.message);
+    console.error(error.message);
     process.exit(1);
   }
 }
